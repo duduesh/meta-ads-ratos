@@ -46,6 +46,20 @@ Depois de instalada, a skill e ativada automaticamente quando voce fala com o Cl
 - "pega as metricas dos ultimos 7 dias da campanha X"
 - "duplica essa campanha e troca os url_tags"
 
+## Disclaimer: use com responsabilidade
+
+Essa skill foi **vibe-codada com Claude Code** a partir da documentacao oficial do [facebook-business SDK](https://github.com/facebook/facebook-python-business-sdk) e da [Meta Marketing API](https://developers.facebook.com/docs/marketing-api/). Ela e um projeto experimental que estamos comecando a testar agora.
+
+**Pontos importantes antes de usar:**
+
+- **Use por sua conta e risco.** Nos nao garantimos que o uso dessa skill nao vai resultar em restricoes, bloqueios ou qualquer problema na sua conta de anuncios. A Meta tem politicas proprias sobre automacao e pode mudar as regras a qualquer momento.
+- **Leia as politicas da Meta.** Antes de usar qualquer automacao, entenda os [Termos de Servico da Meta](https://www.facebook.com/policies/ads/) e as [regras de rate limiting da Marketing API](https://developers.facebook.com/docs/marketing-api/overview/rate-limiting/). A skill inclui delays entre operacoes de escrita, mas isso nao e garantia de nada.
+- **Revise o codigo.** Essa skill tem acesso de leitura e escrita na sua conta de anuncios. Antes de usar, avalie o codigo dos scripts pra entender o que cada operacao faz. E open source justamente pra isso.
+- **Campanhas sempre nascem pausadas.** Por seguranca, toda criacao via skill e feita com status PAUSED. Mas operacoes de edicao e exclusao agem diretamente nos objetos. Tenha cuidado.
+- **Sem garantia de funcionamento.** O SDK e a API da Meta mudam com frequencia. Algo que funciona hoje pode quebrar amanha. Se algo parar de funcionar, provavelmente e uma mudanca na API -- nao no seu setup.
+
+Em resumo: e uma ferramenta poderosa, mas voce e o responsavel pelo que acontece na sua conta. Use com consciencia, teste em contas de teste primeiro se possivel, e nao faca nada que voce nao faria manualmente no Ads Manager.
+
 ## Criado por
 
 [Ratos de IA](https://ratosdeia.com.br) - Curso Claude Code OS
