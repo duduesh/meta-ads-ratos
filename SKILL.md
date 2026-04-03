@@ -193,6 +193,7 @@ O Claude DEVE seguir estas regras ao executar operacoes:
 5. **Respeitar rate limits** -- o SDK ja inclui delays entre operacoes de escrita (1s). Se receber erro de rate limit (codigos 17, 32, 80004), aguardar 60 segundos antes de tentar novamente
 6. **Orcamento com cuidado** -- ao alterar daily_budget ou lifetime_budget, confirmar o valor com o usuario. Valores sao em centavos (5000 = R$50,00)
 7. **Nunca hardcodar tokens** -- sempre usar a env var META_ADS_TOKEN
+8. **Nunca assumir origem de dados** -- ao mostrar insights no nivel da conta, SEMPRE quebrar por campanha antes de atribuir resultados a uma campanha especifica. Nunca dizer "esse gasto e da campanha X" sem ter confirmado com insights por campanha
 
 ## Fluxos comuns
 
