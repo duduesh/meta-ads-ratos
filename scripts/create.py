@@ -132,6 +132,8 @@ def cmd_ad(args):
         params['tracking_specs'] = parse_json_arg(args.tracking_specs, '--tracking-specs')
     if args.conversion_domain:
         params['conversion_domain'] = args.conversion_domain
+    if args.degrees_of_freedom_spec:
+        params['degrees_of_freedom_spec'] = parse_json_arg(args.degrees_of_freedom_spec, '--degrees-of-freedom-spec')
 
     account = AdAccount(account_id)
     result = account.create_ad(params=params)
@@ -152,6 +154,8 @@ def cmd_creative(args):
 
     params = {'name': args.name}
 
+    if args.instagram_user_id:
+        params['instagram_user_id'] = args.instagram_user_id
     if args.object_story_spec:
         params['object_story_spec'] = parse_json_arg(args.object_story_spec, '--object-story-spec')
     if args.asset_feed_spec:
@@ -344,11 +348,13 @@ def main():
     p.add_argument("--status", default="PAUSED", help="Status (default: PAUSED)")
     p.add_argument("--tracking-specs", help="Tracking specs como JSON string")
     p.add_argument("--conversion-domain", help="Dominio de conversao")
+    p.add_argument("--degrees-of-freedom-spec", help="Controle de format options como JSON string")
 
     # --- creative ---
     p = sub.add_parser("creative", help="Criar creative")
     add_account_arg(p)
     p.add_argument("--name", required=True, help="Nome do creative")
+    p.add_argument("--instagram-user-id", help="ID da conta Instagram (obrigatorio para ads no Instagram)")
     p.add_argument("--object-story-spec", help="Object story spec como JSON string")
     p.add_argument("--asset-feed-spec", help="Asset feed spec como JSON string")
     p.add_argument("--url-tags", help="URL tags para tracking")

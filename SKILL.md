@@ -162,8 +162,8 @@ Parametros de insights:
 |---|---|
 | `campaign` | `create.py campaign --account act_123 --name "LEADS-Teste" --objective OUTCOME_LEADS` |
 | `adset` | `create.py adset --account act_123 --name "Publico-Frio" --campaign 123 --optimization-goal LINK_CLICKS --targeting '{...}' --daily-budget 5000` |
-| `ad` | `create.py ad --account act_123 --name "Carrossel-V1" --adset 123 --creative '{"creative_id":"456"}'` |
-| `creative` | `create.py creative --account act_123 --name "Criativo-V1" --object-story-spec '{...}' --url-tags "utm_source=facebook&utm_medium=cpc"` |
+| `ad` | `create.py ad --account act_123 --name "Carrossel-V1" --adset 123 --creative '{"creative_id":"456"}' --degrees-of-freedom-spec '{...}'` |
+| `creative` | `create.py creative --account act_123 --name "Criativo-V1" --instagram-user-id 123 --object-story-spec '{...}' --url-tags "utm_source=facebook&utm_medium=cpc"` |
 | `image` | `create.py image --account act_123 --url "https://exemplo.com/imagem.jpg"` |
 | `video` | `create.py video --account act_123 --url "https://exemplo.com/video.mp4"` |
 | `custom-audience` | `create.py custom-audience --account act_123 --name "Compradores-2026"` |
@@ -215,16 +215,47 @@ O Claude DEVE seguir estas regras ao executar operacoes:
 7. **Nunca hardcodar tokens** -- sempre usar a env var META_ADS_TOKEN
 8. **Nunca assumir origem de dados** -- ao mostrar insights no nivel da conta, SEMPRE quebrar por campanha antes de atribuir resultados a uma campanha especifica. Nunca dizer "esse gasto e da campanha X" sem ter confirmado com insights por campanha
 
+## Padroes de campanha (CRITICO)
+
+**Arquivo:** `references/padroes-campanha.md`
+
+O Claude DEVE ler este arquivo ANTES de criar qualquer campanha. Ele contem regras
+aprendidas por tipo de campanha que evitam erros comuns (ex: carrossel sem preview,
+ads bloqueados em posicionamentos, etc).
+
+Se o tipo de campanha nao estiver documentado, o Claude DEVE primeiro buscar uma
+campanha similar ja existente na conta e usar como template (ver fluxo abaixo).
+
 ## Fluxos comuns
 
 ### Criar campanha completa
+
+**Passo 0 — Diagnostico (OBRIGATORIO antes de criar)**
+1. Ler `references/padroes-campanha.md` para o tipo de campanha desejado
+2. Buscar campanhas similares ja existentes na conta:
+   ```
+   read.py campaigns --account act_XXX --status ACTIVE
+   read.py ads-by-campaign --campaign XXX
+   read.py creative --id XXX
+   ```
+3. Extrair padroes: destination_type, promoted_object, optimization_goal,
+   instagram_user_id, multi_share_end_card, degrees_of_freedom_spec, etc.
+4. Usar como base para a nova campanha
+
+**Passo 1-5 — Criacao**
 1. `create.py campaign` -- cria campanha PAUSED
 2. `create.py adset` -- cria ad set PAUSED com targeting
 3. `create.py image` ou `create.py video` -- sobe midia
-4. `create.py creative` -- cria criativo com url_tags
-5. `create.py ad` -- cria ad PAUSED linkando criativo ao ad set
-6. Revisar tudo com o usuario
-7. Ativar TODOS os niveis (campanha + ad sets + ads):
+4. `create.py creative` -- cria criativo com url_tags e instagram_user_id
+5. `create.py ad` -- cria ad PAUSED com degrees_of_freedom_spec
+
+**Passo 6 — Validacao (OBRIGATORIO apos criar)**
+1. Ler o ad criado: `read.py ad --id XXX`
+2. Checar preview: `read.py preview --creative XXX --format all`
+3. Se houver problemas, corrigir ANTES de reportar sucesso
+
+**Passo 7 — Ativacao**
+Ativar TODOS os niveis (campanha + ad sets + ads):
    - `update.py campaign --id XXX --status ACTIVE`
    - `update.py adset --id XXX --status ACTIVE`
    - `update.py ad --id XXX --status ACTIVE`
