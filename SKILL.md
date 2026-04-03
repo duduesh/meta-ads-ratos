@@ -29,21 +29,35 @@ Checar se existe `~/.claude/skills/meta-ads-ratos/.env`. Se NAO existir, criar c
 # OBRIGATORIO: Token de acesso da Meta (gerar em developers.facebook.com > Graph API Explorer)
 export META_ADS_TOKEN=""
 
+# OBRIGATORIO: App ID do app Meta que gerou o token (ver em developers.facebook.com > My Apps)
+export META_APP_ID=""
+
 # OPCIONAL: Conta de anuncio padrao (evita ter que passar --account toda vez)
 export META_AD_ACCOUNT_ID=""
 ```
 
 Depois de criar, orientar o usuario a:
-1. Preencher o token no `.env`
-2. Adicionar `source ~/.claude/skills/meta-ads-ratos/.env` no `~/.zshrc`
+1. Preencher o `META_ADS_TOKEN` (token de acesso)
+2. Preencher o `META_APP_ID` (ID do app Meta — ex: 905545132380980)
+3. Adicionar `source ~/.claude/skills/meta-ads-ratos/.env` no `~/.zshrc`
 
-### 3. Cadastro de contas (contas.yaml)
+**IMPORTANTE:** O app Meta DEVE estar em modo Live (nao Development) para criar dark posts e criativos via API. Se der erro "app em modo de desenvolvimento", orientar o usuario a mudar o app para modo Live no painel developers.facebook.com. Alem disso, as paginas do Facebook que serao usadas nos anuncios devem estar vinculadas/autorizadas no app.
 
-Informar que existe o arquivo `~/.claude/skills/meta-ads-ratos/contas.yaml` para cadastrar clientes.
-O usuario preenche com os dados de cada cliente (conta de anuncio, pagina do Facebook, Instagram, etc).
-O Claude consulta esse arquivo automaticamente quando o usuario mencionar o nome de um cliente.
+### 3. Cadastro de contas (contas.yaml) — SETUP CONVERSACIONAL
 
-Rodar `read.py accounts` para listar todas as contas disponiveis e ajudar o usuario a preencher.
+Depois que o `.env` estiver preenchido e o `setup.py` passar, o Claude DEVE proativamente guiar o cadastro de contas:
+
+1. Rodar `read.py accounts` para listar todas as contas disponiveis
+2. Perguntar ao usuario: "Qual a tua principal conta de anuncio? Me passa o nome do cliente, e eu preencho o contas.yaml pra ti."
+3. Para cada cliente, perguntar (ou buscar na API se possivel):
+   - Nome do cliente
+   - Conta de anuncio (act_XXX) — pode escolher da lista
+   - Page ID do Facebook
+   - Instagram ID e @username
+4. Preencher o `contas.yaml` automaticamente com as respostas
+5. Perguntar: "Quer cadastrar mais algum cliente?"
+
+Esse fluxo conversacional e o jeito ideal de configurar — o usuario so responde as perguntas e o Claude preenche tudo.
 
 ## Cadastro de clientes (contas.yaml)
 
