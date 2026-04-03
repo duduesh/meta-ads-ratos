@@ -2,6 +2,24 @@
 """
 Meta Ads Ratos - Insights & Reporting
 Subcommands: account, campaign, adset, ad, async
+
+Parametros de insights disponiveis:
+  --date-preset       Periodo relativo (today, yesterday, last_7d, last_30d, etc)
+  --time-range        JSON com datas: '{"since":"2026-01-01","until":"2026-01-31"}'
+  --time-ranges       JSON com multiplos periodos para comparacao
+  --time-increment    Granularidade: 1-90 (dias), monthly, all_days
+  --breakdowns        Segmentar por: age, gender, country, region, publisher_platform,
+                      platform_position, device_platform, impression_device
+  --action-breakdowns Segmentar acoes: action_type, action_device, action_destination
+  --action-report-time Quando acoes contam: impression, conversion, mixed
+  --action-attribution-windows  Janela de atribuicao: 1d_view, 7d_click, 28d_click, dda
+  --filtering         JSON de filtros: '[{"field":"spend","operator":"GREATER_THAN","value":50}]'
+  --sort              Ordenar: spend_descending, impressions_ascending, etc
+  --level             Nivel de agregacao: account, campaign, adset, ad
+  --default-summary   Incluir linha de resumo/totais
+  --locale            Idioma dos resultados: pt_BR, en_US, etc
+  --since / --until   Paginacao temporal (alternativa a time-range)
+  --offset            Paginacao por offset numerico
 """
 
 import argparse
@@ -68,6 +86,8 @@ DATE_PRESET_CHOICES = [
 def _add_insights_args(parser):
     """Add all common insight arguments to a subparser."""
     add_fields_arg(parser)
+
+    # --- Time ---
     parser.add_argument(
         "--date-preset",
         default="last_30d",
@@ -76,66 +96,171 @@ def _add_insights_args(parser):
     )
     parser.add_argument(
         "--time-range",
-        help='JSON time range: \'{"since":"2024-01-01","until":"2024-01-31"}\'',
+        help='JSON: \'{"since":"2026-01-01","until":"2026-01-31"}\'',
+    )
+    parser.add_argument(
+        "--time-ranges",
+        help='JSON com multiplos periodos para comparacao: \'[{"since":"2026-01-01","until":"2026-01-31"},{"since":"2026-02-01","until":"2026-02-28"}]\'',
     )
     parser.add_argument(
         "--time-increment",
         default="all_days",
-        help="Time increment: 1, 7, 14, 28, monthly, all_days (default: all_days)",
+        help="Granularidade: 1-90 (dias), monthly, all_days (default: all_days)",
     )
     parser.add_argument(
+        "--since",
+        help="Data inicio para paginacao temporal (YYYY-MM-DD)",
+    )
+    parser.add_argument(
+        "--until",
+        help="Data fim para paginacao temporal (YYYY-MM-DD)",
+    )
+
+    # --- Segmentation ---
+    parser.add_argument(
         "--breakdowns",
-        help="Comma-separated breakdowns: age,gender,country,region,publisher_platform,platform_position,device_platform,impression_device",
+        help="Segmentar por: age,gender,country,region,publisher_platform,platform_position,device_platform,impression_device",
     )
     parser.add_argument(
         "--level",
         choices=["account", "campaign", "adset", "ad"],
-        help="Aggregation level",
+        help="Nivel de agregacao",
     )
     parser.add_argument(
         "--action-breakdowns",
-        help="Comma-separated action breakdowns",
+        help="Segmentar acoes: action_type,action_device,action_destination,action_conversion_device",
+    )
+
+    # --- Attribution ---
+    parser.add_argument(
+        "--action-report-time",
+        choices=["impression", "conversion", "mixed"],
+        help="Quando acoes contam: impression, conversion, mixed",
     )
     parser.add_argument(
+        "--action-attribution-windows",
+        help="Janelas de atribuicao (CSV): 1d_view,7d_click,28d_click,dda,default",
+    )
+    parser.add_argument(
+        "--use-account-attribution",
+        action="store_true",
+        help="Usar configuracao de atribuicao da conta",
+    )
+    parser.add_argument(
+        "--use-unified-attribution",
+        action="store_true",
+        default=True,
+        help="Usar atribuicao unificada (default: true)",
+    )
+
+    # --- Filtering & Sorting ---
+    parser.add_argument(
         "--filtering",
-        help="JSON filtering spec",
+        help='JSON: \'[{"field":"spend","operator":"GREATER_THAN","value":50}]\'',
     )
     parser.add_argument(
         "--sort",
-        help="Sort field (prefix with - for descending)",
+        help="Ordenar: spend_descending, impressions_ascending, etc",
     )
+
+    # --- Output ---
+    parser.add_argument(
+        "--default-summary",
+        action="store_true",
+        help="Incluir linha de resumo/totais nos resultados",
+    )
+    parser.add_argument(
+        "--locale",
+        help="Idioma dos resultados: pt_BR, en_US, es_ES, etc",
+    )
+
+    # --- Pagination ---
     parser.add_argument(
         "--limit",
         type=int,
         default=25,
-        help="Result limit (default: 25)",
+        help="Limite de resultados por pagina (default: 25)",
     )
-    parser.add_argument("--after", help="Pagination cursor (next page)")
-    parser.add_argument("--before", help="Pagination cursor (previous page)")
+    parser.add_argument(
+        "--offset",
+        type=int,
+        help="Pular N resultados (paginacao por offset)",
+    )
+    parser.add_argument("--after", help="Cursor de paginacao (proxima pagina)")
+    parser.add_argument("--before", help="Cursor de paginacao (pagina anterior)")
 
 
 def _build_insights_params(args):
-    """Build the params dict from parsed arguments."""
+    """Build the params dict from parsed arguments.
+
+    Logica de tempo:
+      - time_range ou time_ranges tem prioridade sobre date_preset
+      - since/until sao usados para paginacao temporal (se nao tiver time_range)
+    """
     params = {}
 
-    if args.date_preset and not args.time_range:
+    # --- Time ---
+    time_range = getattr(args, "time_range", None)
+    time_ranges = getattr(args, "time_ranges", None)
+    since = getattr(args, "since", None)
+    until_ = getattr(args, "until", None)
+
+    if time_ranges:
+        params["time_ranges"] = parse_json_arg(time_ranges, "time-ranges")
+    elif time_range:
+        params["time_range"] = parse_json_arg(time_range, "time-range")
+    elif since or until_:
+        if since:
+            params["since"] = since
+        if until_:
+            params["until"] = until_
+    elif args.date_preset:
         params["date_preset"] = args.date_preset
-    if args.time_range:
-        params["time_range"] = parse_json_arg(args.time_range, "time-range")
+
     if args.time_increment:
         params["time_increment"] = args.time_increment
+
+    # --- Segmentation ---
     if args.breakdowns:
         params["breakdowns"] = args.breakdowns.split(",")
     if args.level:
         params["level"] = args.level
     if args.action_breakdowns:
         params["action_breakdowns"] = args.action_breakdowns.split(",")
+
+    # --- Attribution ---
+    action_report_time = getattr(args, "action_report_time", None)
+    if action_report_time:
+        params["action_report_time"] = action_report_time
+
+    action_attr_windows = getattr(args, "action_attribution_windows", None)
+    if action_attr_windows:
+        params["action_attribution_windows"] = action_attr_windows.split(",")
+
+    if getattr(args, "use_account_attribution", False):
+        params["use_account_attribution_setting"] = True
+    if getattr(args, "use_unified_attribution", False):
+        params["use_unified_attribution_setting"] = True
+
+    # --- Filtering & Sorting ---
     if args.filtering:
         params["filtering"] = parse_json_arg(args.filtering, "filtering")
     if args.sort:
         params["sort"] = [args.sort]
+
+    # --- Output ---
+    if getattr(args, "default_summary", False):
+        params["default_summary"] = True
+    locale = getattr(args, "locale", None)
+    if locale:
+        params["locale"] = locale
+
+    # --- Pagination ---
     if args.limit:
         params["limit"] = args.limit
+    offset = getattr(args, "offset", None)
+    if offset is not None:
+        params["offset"] = offset
     if getattr(args, "after", None):
         params["after"] = args.after
     if getattr(args, "before", None):

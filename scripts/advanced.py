@@ -89,7 +89,11 @@ def _copy_creative_with_url_tags(account_id, source_creative_id, new_url_tags):
 
 @handle_fb_error
 def cmd_swap_url_tags(args):
-    """Troca url_tags de um ad existente criando um novo criativo e fazendo swap."""
+    """⚠️ WRITE — Troca url_tags de um ad existente.
+
+    Criativos Meta sao imutaveis. Este comando cria um criativo novo identico
+    com os url_tags corretos e faz swap atomico no ad.
+    """
     init_api()
     S = _sdk()
 
@@ -126,7 +130,10 @@ def cmd_swap_url_tags(args):
 
 @handle_fb_error
 def cmd_duplicate_ad(args):
-    """Duplica um ad, opcionalmente com novos url_tags."""
+    """⚠️ WRITE — Duplica ad (PAUSED) com opcao de novos url_tags.
+
+    Preserva tracking_specs e conversion_domain do original.
+    """
     init_api()
     S = _sdk()
 
@@ -177,7 +184,10 @@ def cmd_duplicate_ad(args):
 
 @handle_fb_error
 def cmd_duplicate_adset(args):
-    """Duplica um ad set para a mesma ou outra campanha."""
+    """⚠️ WRITE — Duplica ad set (PAUSED) para a mesma ou outra campanha.
+
+    Copia: targeting, budgets, bid_strategy, optimization_goal, promoted_object.
+    """
     init_api()
     S = _sdk()
 
@@ -223,7 +233,11 @@ def cmd_duplicate_adset(args):
 
 @handle_fb_error
 def cmd_duplicate_campaign(args):
-    """Duplica uma campanha. Com --deep, duplica tambem adsets e ads."""
+    """⚠️ WRITE — Duplica campanha inteira (PAUSED).
+
+    --deep: duplica recursivamente todos os ad sets e ads (ACTIVE + PAUSED).
+    Sem --deep: duplica so a campanha (sem ad sets/ads).
+    """
     init_api()
     S = _sdk()
 

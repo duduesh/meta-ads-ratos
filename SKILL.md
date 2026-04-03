@@ -101,7 +101,7 @@ O Claude deve interpretar o pedido do usuario e executar o script correto via Ba
 | `ad` | Detalhes de um ad | `read.py ad --id 123` |
 | `creative` | Detalhes de um criativo | `read.py creative --id 123` |
 | `creatives-by-ad` | Criativos de um ad | `read.py creatives-by-ad --ad 123` |
-| `preview` | Preview HTML de criativo | `read.py preview --creative 123` |
+| `preview` | Preview HTML de criativo | `read.py preview --creative 123 --format INSTAGRAM_STORY` ou `--format all` |
 | `images` | Lista imagens da conta | `read.py images --account act_123` |
 | `videos` | Lista videos da conta | `read.py videos --account act_123` |
 | `activities` | Log de atividades da conta | `read.py activities --account act_123` |
@@ -120,7 +120,27 @@ O Claude deve interpretar o pedido do usuario e executar o script correto via Ba
 | `ad` | `insights.py ad --id 123 --date-preset yesterday` |
 | `async` | `insights.py async --id act_123 --date-preset maximum --level campaign` |
 
-Parametros comuns de insights: `--date-preset`, `--time-range` (JSON), `--time-increment`, `--breakdowns`, `--level`, `--action-breakdowns`, `--filtering` (JSON), `--sort`, `--limit`
+Parametros de insights:
+
+| Parametro | O que faz | Exemplo |
+|---|---|---|
+| `--date-preset` | Periodo relativo | `last_7d`, `last_30d`, `today`, `maximum` |
+| `--time-range` | Periodo especifico (JSON) | `'{"since":"2026-01-01","until":"2026-01-31"}'` |
+| `--time-ranges` | Comparacao entre periodos (JSON) | `'[{"since":"2026-01","until":"2026-01-31"},{"since":"2026-02-01","until":"2026-02-28"}]'` |
+| `--time-increment` | Granularidade | `1`, `7`, `monthly`, `all_days` |
+| `--breakdowns` | Segmentar resultados | `age,gender`, `country`, `publisher_platform` |
+| `--action-breakdowns` | Segmentar acoes | `action_type`, `action_device` |
+| `--action-report-time` | Quando acoes contam | `impression`, `conversion`, `mixed` |
+| `--action-attribution-windows` | Janela de atribuicao | `1d_view,7d_click`, `28d_click`, `dda` |
+| `--level` | Nivel de agregacao | `account`, `campaign`, `adset`, `ad` |
+| `--filtering` | Filtrar resultados (JSON) | `'[{"field":"spend","operator":"GREATER_THAN","value":50}]'` |
+| `--sort` | Ordenar | `spend_descending`, `impressions_ascending` |
+| `--default-summary` | Incluir totais | (flag, sem valor) |
+| `--locale` | Idioma dos resultados | `pt_BR`, `en_US` |
+| `--limit` | Limite por pagina | `25` (default) |
+| `--offset` | Pular N resultados | `50` |
+| `--since` / `--until` | Paginacao temporal | `2026-01-01` |
+| `--use-account-attribution` | Usar atribuicao da conta | (flag) |
 
 ### Targeting (targeting.py)
 

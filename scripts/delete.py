@@ -22,7 +22,8 @@ from facebook_business.adobjects.customaudience import CustomAudience
 
 @handle_fb_error
 def cmd_object(args):
-    """Deleta qualquer objeto (campaign, adset, ad, creative) via API genérica."""
+    """⚠️ DELETE — Arquiva qualquer objeto (campaign, adset, ad, creative).
+    Soft delete: o objeto e arquivado, nao permanentemente removido."""
     init_api()
     from facebook_business.api import FacebookAdsApi
 

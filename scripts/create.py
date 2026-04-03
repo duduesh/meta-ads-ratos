@@ -23,6 +23,12 @@ from facebook_business.adobjects.customaudience import CustomAudience
 
 @handle_fb_error
 def cmd_campaign(args):
+    """⚠️ WRITE — Cria campanha (status PAUSED por padrao).
+
+    Objetivos: OUTCOME_SALES, OUTCOME_LEADS, OUTCOME_ENGAGEMENT,
+    OUTCOME_AWARENESS, OUTCOME_TRAFFIC, OUTCOME_APP_PROMOTION
+    Orcamento em centavos: 5000 = R$50,00
+    """
     init_api()
     account_id = resolve_account(args.account)
 
@@ -56,6 +62,11 @@ def cmd_campaign(args):
 
 @handle_fb_error
 def cmd_adset(args):
+    """⚠️ WRITE — Cria ad set (status PAUSED por padrao).
+
+    Requer: campaign_id, optimization_goal, targeting (JSON), billing_event.
+    Orcamento em centavos: daily_budget 5000 = R$50,00/dia
+    """
     init_api()
     account_id = resolve_account(args.account)
 
@@ -99,6 +110,10 @@ def cmd_adset(args):
 
 @handle_fb_error
 def cmd_ad(args):
+    """⚠️ WRITE — Cria ad (status PAUSED por padrao).
+
+    Requer: adset_id, creative (JSON: {"creative_id":"123"}).
+    """
     init_api()
     account_id = resolve_account(args.account)
 
@@ -128,6 +143,10 @@ def cmd_ad(args):
 
 @handle_fb_error
 def cmd_creative(args):
+    """⚠️ WRITE — Cria criativo. Criativos sao IMUTAVEIS apos criacao.
+
+    Para trocar url_tags de um criativo existente, use advanced.py swap-url-tags.
+    """
     init_api()
     account_id = resolve_account(args.account)
 

@@ -22,6 +22,8 @@ from facebook_business.adobjects.customaudience import CustomAudience
 
 @handle_fb_error
 def cmd_campaign(args):
+    """⚠️ WRITE — Atualiza campanha. Ao ativar (--status ACTIVE), lembre de ativar
+    tambem todos os ad sets e ads da campanha."""
     init_api()
     params = {}
     if args.name:
@@ -57,6 +59,8 @@ def cmd_campaign(args):
 
 @handle_fb_error
 def cmd_adset(args):
+    """⚠️ WRITE — Atualiza ad set (targeting, budget, status, etc).
+    Orcamento em centavos: 5000 = R$50,00."""
     init_api()
     params = {}
     if args.name:
@@ -96,6 +100,7 @@ def cmd_adset(args):
 
 @handle_fb_error
 def cmd_ad(args):
+    """⚠️ WRITE — Atualiza ad (status, nome, criativo)."""
     init_api()
     params = {}
     if args.name:

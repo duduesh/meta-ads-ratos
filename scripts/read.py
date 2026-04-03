@@ -311,13 +311,52 @@ def cmd_creatives_by_ad(args):
 # 15. preview
 # ---------------------------------------------------------------------------
 
+PREVIEW_FORMATS = [
+    "DESKTOP_FEED_STANDARD",
+    "RIGHT_COLUMN_STANDARD",
+    "MOBILE_FEED_STANDARD",
+    "MOBILE_FEED_BASIC",
+    "INSTAGRAM_STANDARD",
+    "INSTAGRAM_STORY",
+    "INSTAGRAM_REELS",
+    "MARKETPLACE_MOBILE",
+    "AUDIENCE_NETWORK_OUTSTREAM_VIDEO",
+    "INSTANT_ARTICLE_STANDARD",
+    "MESSENGER_MOBILE_INBOX_MEDIA",
+]
+
+
 @handle_fb_error
 def cmd_preview(args):
+    """Gera preview HTML de um criativo em um ou mais formatos.
+
+    Formatos disponiveis: DESKTOP_FEED_STANDARD, RIGHT_COLUMN_STANDARD,
+    MOBILE_FEED_STANDARD, MOBILE_FEED_BASIC, INSTAGRAM_STANDARD,
+    INSTAGRAM_STORY, INSTAGRAM_REELS, MARKETPLACE_MOBILE,
+    AUDIENCE_NETWORK_OUTSTREAM_VIDEO, INSTANT_ARTICLE_STANDARD,
+    MESSENGER_MOBILE_INBOX_MEDIA
+
+    Use --format all para gerar preview em todos os formatos.
+    """
     init_api()
     S = _sdk()
-    params = {"ad_format": args.format}
-    previews = S["AdCreative"](args.creative).get_previews(params=params)
-    print_json(_collect(previews))
+    if args.format.lower() == "all":
+        all_previews = []
+        for fmt in PREVIEW_FORMATS:
+            try:
+                previews = S["AdCreative"](args.creative).get_previews(
+                    params={"ad_format": fmt}
+                )
+                for p in _collect(previews):
+                    p["_format"] = fmt
+                    all_previews.append(p)
+            except Exception:
+                pass
+        print_json(all_previews)
+    else:
+        params = {"ad_format": args.format}
+        previews = S["AdCreative"](args.creative).get_previews(params=params)
+        print_json(_collect(previews))
 
 
 # ---------------------------------------------------------------------------
@@ -572,7 +611,9 @@ def build_parser():
     p = sub.add_parser("preview", help="Get ad preview HTML")
     p.add_argument("--creative", required=True, help="Creative ID")
     p.add_argument("--format", default="DESKTOP_FEED_STANDARD",
-                   help="Ad format (default: DESKTOP_FEED_STANDARD)")
+                   help="Formato: DESKTOP_FEED_STANDARD, MOBILE_FEED_STANDARD, "
+                        "INSTAGRAM_STANDARD, INSTAGRAM_STORY, INSTAGRAM_REELS, "
+                        "ou 'all' para todos (default: DESKTOP_FEED_STANDARD)")
     p.set_defaults(func=cmd_preview)
 
     # 16. images
