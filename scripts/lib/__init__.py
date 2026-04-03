@@ -161,7 +161,7 @@ def add_fields_arg(parser):
 
 def add_pagination_args(parser):
     """Adiciona argumentos de paginacao ao parser."""
-    parser.add_argument("--limit", type=int, default=25, help="Limite de resultados (padrao: 25)")
+    parser.add_argument("--limit", type=int, default=None, help="Limite de resultados (padrao: todos)")
     parser.add_argument("--after", help="Cursor de paginacao (proxima pagina)")
     parser.add_argument("--before", help="Cursor de paginacao (pagina anterior)")
 

@@ -49,9 +49,9 @@ def _sdk():
 
 def _build_params(args, include_status=True):
     """Build common params dict from argparse namespace."""
-    params = {}
+    params = {"limit": 100}
     if hasattr(args, "limit") and args.limit:
-        params["limit"] = args.limit
+        params["limit"] = min(args.limit, 100)
     if hasattr(args, "after") and args.after:
         params["after"] = args.after
     if hasattr(args, "before") and args.before:
@@ -64,12 +64,12 @@ def _build_params(args, include_status=True):
 
 
 def _collect(cursor, limit=None):
-    """Collect results from an SDK cursor, respecting limit."""
-    results = []
-    for item in cursor:
-        results.append(item)
-        if limit and len(results) >= limit:
-            break
+    """Collect ALL results from an SDK cursor, auto-paginating."""
+    results = [cursor[i] for i in range(len(cursor))]
+    while cursor.load_next_page():
+        results.extend([cursor[i] for i in range(len(cursor))])
+    if limit:
+        return results[:limit]
     return results
 
 
@@ -82,7 +82,7 @@ def cmd_accounts(args):
     init_api()
     S = _sdk()
     fields = parse_fields(args.fields) or ["account_id", "name", "account_status", "currency"]
-    params = {"limit": args.limit} if args.limit else {}
+    params = {"limit": 100}
     accounts = S["User"]("me").get_ad_accounts(fields=fields, params=params)
     print_json(_collect(accounts, args.limit))
 
@@ -474,7 +474,7 @@ def build_parser():
     # 1. accounts
     p = sub.add_parser("accounts", help="List ad accounts for authenticated user")
     add_fields_arg(p)
-    p.add_argument("--limit", type=int, default=25, help="Max results (default: 25)")
+    p.add_argument("--limit", type=int, default=None, help="Max results (default: all)")
     p.set_defaults(func=cmd_accounts)
 
     # 2. account-details

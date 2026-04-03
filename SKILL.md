@@ -7,18 +7,53 @@ description: Gerencia campanhas Meta Ads (Facebook/Instagram) via SDK oficial. L
 
 Skill completa para gestao de Meta Ads via SDK oficial (`facebook-business`). Substitui o MCP fb-ads-mcp-server com mais poder: duplicacao de campanhas/ads, swap de url_tags, e acesso total a API.
 
-## Setup
+## Setup (primeira vez)
 
-Na primeira vez, rode o install wizard:
+Quando o usuario pedir para configurar, rodar setup, ou for a primeira vez usando a skill, o Claude deve guiar o setup interativo:
+
+### 1. Verificar dependencias
 
 ```bash
 python3 ~/.claude/skills/meta-ads-ratos/scripts/setup.py
 ```
 
-Se faltar algo:
-1. Instalar SDK: `pip3 install facebook-business`
-2. Configurar token: `export META_ADS_TOKEN="seu-token"` no `~/.zshrc`
-3. Configurar conta padrao (opcional): `export META_AD_ACCOUNT_ID="act_123"` no `~/.zshrc`
+### 2. Verificar .env
+
+Checar se existe `~/.claude/skills/meta-ads-ratos/.env`. Se NAO existir, criar com o template:
+
+```
+# Meta Ads Ratos — Configuracao
+# Preencha os valores abaixo e adicione ao seu ~/.zshrc:
+#   source ~/.claude/skills/meta-ads-ratos/.env
+
+# OBRIGATORIO: Token de acesso da Meta (gerar em developers.facebook.com > Graph API Explorer)
+export META_ADS_TOKEN=""
+
+# OPCIONAL: Conta de anuncio padrao (evita ter que passar --account toda vez)
+export META_AD_ACCOUNT_ID=""
+```
+
+Depois de criar, orientar o usuario a:
+1. Preencher o token no `.env`
+2. Adicionar `source ~/.claude/skills/meta-ads-ratos/.env` no `~/.zshrc`
+
+### 3. Cadastro de contas (contas.yaml)
+
+Informar que existe o arquivo `~/.claude/skills/meta-ads-ratos/contas.yaml` para cadastrar clientes.
+O usuario preenche com os dados de cada cliente (conta de anuncio, pagina do Facebook, Instagram, etc).
+O Claude consulta esse arquivo automaticamente quando o usuario mencionar o nome de um cliente.
+
+Rodar `read.py accounts` para listar todas as contas disponiveis e ajudar o usuario a preencher.
+
+## Cadastro de clientes (contas.yaml)
+
+**Arquivo:** `~/.claude/skills/meta-ads-ratos/contas.yaml`
+
+Antes de executar qualquer operacao, o Claude DEVE ler este arquivo para resolver nomes de clientes para IDs.
+Quando o usuario disser "cria campanha pra DobraLabs" ou "insights do Ronnau", consultar o contas.yaml
+para obter conta_anuncio, pagina_facebook e instagram_id do cliente.
+
+Se o cliente nao estiver cadastrado, perguntar os dados e oferecer para adicionar ao arquivo.
 
 ## Como usar
 
@@ -140,9 +175,10 @@ O Claude DEVE seguir estas regras ao executar operacoes:
 1. **Criar sempre PAUSED** -- nunca criar objetos com status ACTIVE diretamente
 2. **Confirmar antes de deletar** -- perguntar ao usuario antes de executar delete
 3. **Confirmar antes de ativar** -- perguntar antes de mudar status para ACTIVE
-4. **Respeitar rate limits** -- o SDK ja inclui delays entre operacoes de escrita (1s). Se receber erro de rate limit (codigos 17, 32, 80004), aguardar 60 segundos antes de tentar novamente
-5. **Orcamento com cuidado** -- ao alterar daily_budget ou lifetime_budget, confirmar o valor com o usuario. Valores sao em centavos (5000 = R$50,00)
-6. **Nunca hardcodar tokens** -- sempre usar a env var META_ADS_TOKEN
+4. **Ativar TODOS os niveis** -- ao ativar uma campanha, SEMPRE ativar tambem todos os ad sets e ads dentro dela. Nunca ativar so a campanha e esquecer os niveis abaixo. Ordem: campaign → adsets → ads
+5. **Respeitar rate limits** -- o SDK ja inclui delays entre operacoes de escrita (1s). Se receber erro de rate limit (codigos 17, 32, 80004), aguardar 60 segundos antes de tentar novamente
+6. **Orcamento com cuidado** -- ao alterar daily_budget ou lifetime_budget, confirmar o valor com o usuario. Valores sao em centavos (5000 = R$50,00)
+7. **Nunca hardcodar tokens** -- sempre usar a env var META_ADS_TOKEN
 
 ## Fluxos comuns
 
@@ -153,7 +189,10 @@ O Claude DEVE seguir estas regras ao executar operacoes:
 4. `create.py creative` -- cria criativo com url_tags
 5. `create.py ad` -- cria ad PAUSED linkando criativo ao ad set
 6. Revisar tudo com o usuario
-7. `update.py campaign --status ACTIVE` -- ativar
+7. Ativar TODOS os niveis (campanha + ad sets + ads):
+   - `update.py campaign --id XXX --status ACTIVE`
+   - `update.py adset --id XXX --status ACTIVE`
+   - `update.py ad --id XXX --status ACTIVE`
 
 ### Corrigir url_tags de ads existentes
 
