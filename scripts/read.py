@@ -73,6 +73,27 @@ def _collect(cursor, limit=None):
     return results
 
 
+_BUDGET_FIELDS = (
+    "daily_budget", "lifetime_budget", "budget_remaining",
+    "spend_cap", "amount_spent", "balance",
+)
+
+
+def _format_budgets(results):
+    """Converte campos de orcamento de centavos para reais (/ 100)."""
+    for row in results:
+        if not hasattr(row, 'get'):
+            continue
+        for field in _BUDGET_FIELDS:
+            val = row.get(field)
+            if val is not None:
+                try:
+                    row[field] = f"{int(val) / 100:.2f}"
+                except (ValueError, TypeError):
+                    pass
+    return results
+
+
 # ---------------------------------------------------------------------------
 # 1. accounts
 # ---------------------------------------------------------------------------
@@ -116,7 +137,7 @@ def cmd_campaign(args):
         "lifetime_budget", "created_time", "updated_time",
     ]
     campaign = S["Campaign"](args.id).api_get(fields=fields)
-    print_json(campaign)
+    print_json(_format_budgets([campaign])[0])
 
 
 # ---------------------------------------------------------------------------
@@ -133,7 +154,7 @@ def cmd_campaigns(args):
     ]
     params = _build_params(args)
     campaigns = S["AdAccount"](account_id).get_campaigns(fields=fields, params=params)
-    print_json(_collect(campaigns, args.limit))
+    print_json(_format_budgets(_collect(campaigns, args.limit)))
 
 
 # ---------------------------------------------------------------------------
@@ -149,7 +170,7 @@ def cmd_adset(args):
         "lifetime_budget", "targeting", "optimization_goal",
     ]
     adset = S["AdSet"](args.id).api_get(fields=fields)
-    print_json(adset)
+    print_json(_format_budgets([adset])[0])
 
 
 # ---------------------------------------------------------------------------
@@ -169,7 +190,7 @@ def cmd_adsets_by_ids(args):
     for adset_id in ids:
         adset = S["AdSet"](adset_id).api_get(fields=fields)
         results.append(adset)
-    print_json(results)
+    print_json(_format_budgets(results))
 
 
 # ---------------------------------------------------------------------------
@@ -187,7 +208,7 @@ def cmd_adsets(args):
     ]
     params = _build_params(args)
     adsets = S["AdAccount"](account_id).get_ad_sets(fields=fields, params=params)
-    print_json(_collect(adsets, args.limit))
+    print_json(_format_budgets(_collect(adsets, args.limit)))
 
 
 # ---------------------------------------------------------------------------
@@ -204,7 +225,7 @@ def cmd_adsets_by_campaign(args):
     ]
     params = _build_params(args)
     adsets = S["Campaign"](args.campaign).get_ad_sets(fields=fields, params=params)
-    print_json(_collect(adsets, args.limit))
+    print_json(_format_budgets(_collect(adsets, args.limit)))
 
 
 # ---------------------------------------------------------------------------

@@ -277,6 +277,76 @@ def _resolve_fields(args):
 
 
 # ---------------------------------------------------------------------------
+# Post-processing
+# ---------------------------------------------------------------------------
+
+# Prefixos de acoes redundantes que a Meta retorna em duplicata
+_REDUNDANT_PREFIXES = (
+    "omni_",
+    "onsite_web_app_",
+    "onsite_web_",
+    "onsite_app_",
+    "web_app_in_store_",
+    "offsite_conversion.fb_pixel_",
+)
+
+
+def _strip_redundant_actions(results):
+    """Remove acoes redundantes dos insights (~60% menor).
+
+    A Meta retorna a mesma acao com prefixos diferentes (omni_purchase,
+    onsite_web_app_purchase, offsite_conversion.fb_pixel_purchase, etc).
+    Mantemos apenas a acao canonica (ex: purchase, link_click).
+    """
+    action_fields = ("actions", "cost_per_action_type", "action_values")
+    for row in results:
+        if not hasattr(row, 'get'):
+            continue
+        for field in action_fields:
+            actions = row.get(field)
+            if not actions or not isinstance(actions, list):
+                continue
+            row[field] = [
+                a for a in actions
+                if not any(a.get("action_type", "").startswith(p) for p in _REDUNDANT_PREFIXES)
+            ]
+    return results
+
+
+# Campos que estao em centavos na API
+_BUDGET_FIELDS = (
+    "daily_budget", "lifetime_budget", "budget_remaining",
+    "spend_cap", "amount_spent", "balance",
+)
+
+
+def _format_monetary(results):
+    """Converte campos de orcamento de centavos para reais (/ 100).
+
+    Campos de insights como spend, cpc, cpm ja vem formatados pela API.
+    Mas daily_budget, lifetime_budget, etc vem em centavos.
+    """
+    for row in results:
+        if not hasattr(row, 'get'):
+            continue
+        for field in _BUDGET_FIELDS:
+            val = row.get(field)
+            if val is not None:
+                try:
+                    row[field] = f"{int(val) / 100:.2f}"
+                except (ValueError, TypeError):
+                    pass
+    return results
+
+
+def _postprocess(results):
+    """Aplica compact mode e formatacao monetaria."""
+    results = _strip_redundant_actions(results)
+    results = _format_monetary(results)
+    return results
+
+
+# ---------------------------------------------------------------------------
 # Subcommands
 # ---------------------------------------------------------------------------
 
@@ -292,7 +362,7 @@ def cmd_account(args):
     account = AdAccount(account_id)
     cursor = account.get_insights(fields=fields, params=params)
     results = [item for item in cursor]
-    print_json(results)
+    print_json(_postprocess(results))
 
 
 @handle_fb_error
@@ -309,7 +379,7 @@ def cmd_campaign(args):
     campaign = Campaign(args.id)
     cursor = campaign.get_insights(fields=fields, params=params)
     results = [item for item in cursor]
-    print_json(results)
+    print_json(_postprocess(results))
 
 
 @handle_fb_error
@@ -326,7 +396,7 @@ def cmd_adset(args):
     adset = AdSet(args.id)
     cursor = adset.get_insights(fields=fields, params=params)
     results = [item for item in cursor]
-    print_json(results)
+    print_json(_postprocess(results))
 
 
 @handle_fb_error
@@ -343,7 +413,7 @@ def cmd_ad(args):
     ad = Ad(args.id)
     cursor = ad.get_insights(fields=fields, params=params)
     results = [item for item in cursor]
-    print_json(results)
+    print_json(_postprocess(results))
 
 
 @handle_fb_error
@@ -379,7 +449,7 @@ def cmd_async(args):
     print("Buscando resultados...", file=sys.stderr)
     cursor = report.get_result()
     results = [item for item in cursor]
-    print_json(results)
+    print_json(_postprocess(results))
 
 
 # ---------------------------------------------------------------------------
