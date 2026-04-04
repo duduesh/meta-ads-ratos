@@ -203,6 +203,41 @@ O `--deep` no `duplicate-campaign` duplica tambem todos os ad sets e ads da camp
 
 ---
 
+## Aprendizados (memória persistente)
+
+**Arquivo:** `aprendizados.md` (na raiz da skill, `~/.claude/skills/meta-ads-ratos/aprendizados.md`)
+
+O Claude DEVE:
+
+1. **Ler `aprendizados.md` no início de QUALQUER operação de criação** (campanha, ad set, criativo, ad). Aplicar todas as regras listadas.
+
+2. **Quando o usuário corrigir algo** (ex: "faltou o CTA", "tinha que ser carrossel", "botão errado"), o Claude DEVE perguntar:
+   "Quer que eu registre isso nos aprendizados pra não esquecer nas próximas vezes?"
+
+3. **Quando o usuário pedir explicitamente** ("lembra disso", "registra isso", "anota pra próxima"), registrar imediatamente.
+
+4. **Formato de cada entrada** no aprendizados.md:
+   ```markdown
+   ### {DATA} — {título curto}
+   **Regra:** {o que fazer sempre/nunca}
+   **Contexto:** {o que aconteceu pra gerar esse aprendizado}
+   ```
+
+5. **Não duplicar** — antes de adicionar, verificar se já existe regra similar.
+
+Exemplo de aprendizados.md:
+```markdown
+# Aprendizados — Meta Ads Ratos
+
+### 2026-04-03 — Sempre incluir CTA no criativo
+**Regra:** Ao criar criativos (create.py creative), SEMPRE incluir call_to_action_type. Padrão: LEARN_MORE pra tráfego, SIGN_UP pra leads, SHOP_NOW pra vendas.
+**Contexto:** Criou carrossel sem botão de CTA. Usuário teve que corrigir manualmente.
+
+### 2026-04-03 — Carrossel Instagram: multi_share_end_card=false
+**Regra:** Em campanhas de visita ao perfil Instagram, SEMPRE usar multi_share_end_card=false e multi_share_optimized=false.
+**Contexto:** Cartão "Ver mais" sem URL quebrou o anúncio em 10 posicionamentos.
+```
+
 ## Regras de seguranca
 
 O Claude DEVE seguir estas regras ao executar operacoes:
