@@ -23,23 +23,24 @@ Checar se existe `~/.claude/skills/meta-ads-ratos/.env`. Se NAO existir, criar c
 
 ```
 # Meta Ads Ratos — Configuracao
-# Preencha os valores abaixo e adicione ao seu ~/.zshrc:
-#   source ~/.claude/skills/meta-ads-ratos/.env
+# Os scripts leem este arquivo automaticamente. NAO precisa adicionar ao ~/.zshrc.
 
 # OBRIGATORIO: Token de acesso da Meta (gerar em developers.facebook.com > Graph API Explorer)
-export META_ADS_TOKEN=""
+META_ADS_TOKEN=""
 
 # OBRIGATORIO: App ID do app Meta que gerou o token (ver em developers.facebook.com > My Apps)
-export META_APP_ID=""
+META_APP_ID=""
 
 # OPCIONAL: Conta de anuncio padrao (evita ter que passar --account toda vez)
-export META_AD_ACCOUNT_ID=""
+META_AD_ACCOUNT_ID=""
 ```
 
 Depois de criar, orientar o usuario a:
 1. Preencher o `META_ADS_TOKEN` (token de acesso)
 2. Preencher o `META_APP_ID` (ID do app Meta — ex: 905545132380980)
-3. Adicionar `source ~/.claude/skills/meta-ads-ratos/.env` no `~/.zshrc`
+
+**IMPORTANTE**: Os scripts leem o `.env` automaticamente. NAO precisa fazer `source` no `~/.zshrc`.
+O token fica isolado dentro da skill e nao vaza pra outras sessoes do terminal.
 
 **IMPORTANTE:** O app Meta DEVE estar em modo Live (nao Development) para criar dark posts e criativos via API. Se der erro "app em modo de desenvolvimento", orientar o usuario a mudar o app para modo Live no painel developers.facebook.com. Alem disso, as paginas do Facebook que serao usadas nos anuncios devem estar vinculadas/autorizadas no app.
 

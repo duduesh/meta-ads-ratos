@@ -29,8 +29,48 @@ def ensure_sdk():
 
 _api_initialized = False
 
+# ---------------------------------------------------------------------------
+# .env loader (sem depender de python-dotenv)
+# ---------------------------------------------------------------------------
+
+_ENV_SEARCH_PATHS = [
+    os.path.expanduser("~/.claude/skills/meta-ads-ratos/.env"),
+    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env"),
+]
+
+def _load_env_file():
+    """Carrega variáveis de um .env sem precisar de source no zshrc."""
+    for env_path in _ENV_SEARCH_PATHS:
+        if os.path.isfile(env_path):
+            with open(env_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    # Remove 'export ' se presente
+                    if line.startswith("export "):
+                        line = line[7:]
+                    if "=" not in line:
+                        continue
+                    key, _, value = line.partition("=")
+                    key = key.strip()
+                    value = value.strip().strip('"').strip("'")
+                    # Só seta se não existir na env (env var explícita tem prioridade)
+                    if key and value and not os.environ.get(key):
+                        os.environ[key] = value
+            return env_path
+    return None
+
+
+def mask_token(token):
+    """Mascara token pra não vazar em logs/output. Mostra só os 6 primeiros chars."""
+    if not token or len(token) < 10:
+        return "***"
+    return f"{token[:6]}...{token[-4:]}"
+
+
 def init_api():
-    """Inicializa o SDK com o token da env var META_ADS_TOKEN."""
+    """Inicializa o SDK com o token do .env ou env var META_ADS_TOKEN."""
     global _api_initialized
     if _api_initialized:
         return
@@ -38,15 +78,23 @@ def init_api():
     ensure_sdk()
     from facebook_business.api import FacebookAdsApi
 
+    # Tenta carregar do .env primeiro
+    env_file = _load_env_file()
+
     token = os.environ.get("META_ADS_TOKEN")
     if not token:
-        print("ERRO: Variavel de ambiente META_ADS_TOKEN nao definida.", file=sys.stderr)
-        print("  Adicione ao seu ~/.zshrc ou ~/.bashrc:", file=sys.stderr)
-        print('  export META_ADS_TOKEN="seu-token-aqui"', file=sys.stderr)
+        print("ERRO: Token META_ADS_TOKEN não encontrado.", file=sys.stderr)
+        print("  Crie o arquivo ~/.claude/skills/meta-ads-ratos/.env com:", file=sys.stderr)
+        print('  META_ADS_TOKEN="seu-token-aqui"', file=sys.stderr)
+        print("", file=sys.stderr)
+        print("  Ou rode: /meta-ads-ratos setup", file=sys.stderr)
         sys.exit(1)
 
     FacebookAdsApi.init(access_token=token)
     _api_initialized = True
+
+    if env_file:
+        print(f"Token carregado de {env_file} ({mask_token(token)})", file=sys.stderr)
 
 
 def get_default_account_id():
