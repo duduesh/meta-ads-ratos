@@ -9,7 +9,9 @@ Skill completa para gestao de Meta Ads via SDK oficial (`facebook-business`). Su
 
 ## Setup (primeira vez)
 
-Quando o usuario pedir para configurar, rodar setup, ou for a primeira vez usando a skill, o Claude deve guiar o setup interativo:
+Quando o usuario pedir para configurar, rodar setup, ou for a primeira vez usando a skill, o Claude deve guiar o setup interativo.
+
+**IMPORTANTE:** Ler `references/setup-meta-app.md` ANTES de comecar o setup. Esse arquivo contem o passo a passo completo para criar o app no Meta Developer Dashboard, gerar o token e resolver problemas. Se o aluno mandar prints ou tiver duvidas sobre alguma tela do Facebook, consultar esse arquivo para orientar.
 
 ### 1. Verificar dependencias
 
@@ -237,6 +239,23 @@ Exemplo de aprendizados.md:
 **Regra:** Em campanhas de visita ao perfil Instagram, SEMPRE usar multi_share_end_card=false e multi_share_optimized=false.
 **Contexto:** Cartão "Ver mais" sem URL quebrou o anúncio em 10 posicionamentos.
 ```
+
+## Registro no historico (apos acoes de escrita)
+
+Depois de qualquer acao que modifica a conta (create, update, delete, pause, activate),
+o Claude DEVE perguntar:
+
+> "Quer que eu registre essa acao no historico de otimizacoes?"
+
+Se o usuario confirmar E a skill `ads-ratos` estiver instalada (`~/.claude/skills/ads-ratos/SKILL.md` existir),
+executar o fluxo do `/ads-ratos historico` com os dados da acao que acabou de ser feita:
+- Cliente, o que foi feito (com IDs), motivo, hipotese e metricas antes.
+
+Se a skill `ads-ratos` NAO estiver instalada, registrar num arquivo local
+`historico.md` na raiz do workspace com o mesmo formato.
+
+Essa regra garante que mesmo usando a meta-ads-ratos diretamente (sem passar pela ads-ratos),
+o historico de otimizacoes nao se perde.
 
 ## Regras de seguranca
 
